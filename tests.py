@@ -4,19 +4,22 @@ from random import randint
 import chess
 
 board = Board()
+move = chess.Move.from_uci("g1f3")
+board.push(move)
+print(board)
 # print(board.fen())
-moves = board.generate_legal_moves()
-print(type(moves))
+# moves = board.generate_legal_moves()
+# print(type(moves))
 # for move in moves:
 #     print(move)
-for _ in range(10):
-    moves = board.generate_legal_moves()
-    i = randint(1, board.legal_moves.count())
-    for _ in range(i):
-        uci = next(moves)
-    board.push(uci)
-    print(board)
-    print("---------------")
+# for _ in range(10):
+#     moves = board.generate_legal_moves()
+#     i = randint(1, board.legal_moves.count())
+#     for _ in range(i):
+#         uci = next(moves)
+#     board.push(uci)
+#     print(board)
+#     print("---------------")
 
 
 
