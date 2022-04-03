@@ -49,7 +49,7 @@ def max_(board: Board, colour: bool, depth_left: int):
     return evaluate(board, colour)
 
 
-def calculate_move(board: Board, colour: bool, depth_left: int):
+def calculate_move_naive(board: Board, colour: bool, depth_left: int):
     n = board.legal_moves.count()
     D = [[float('-inf'), None] for _ in range(n)]
     moves = board.generate_legal_moves()
@@ -68,17 +68,4 @@ def calculate_move(board: Board, colour: bool, depth_left: int):
     return best_valued_move
 
 
-board = Board()
-for i in range(10):
-    white_move = calculate_move(board, True, 3)
-    board.push(white_move)
-    print(board)
-    print("value", evaluate(board, True))
-    print("white")
-    print("-----------------------")
-    black_move = calculate_move(board, False, 3)
-    board.push(black_move)
-    print(board)
-    print("value", evaluate(board, False))
-    print("black")
-    print("-----------------------")
+

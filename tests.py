@@ -1,25 +1,30 @@
-from chess import Move
-from chess import Board
-from random import randint
-import chess
+import chess as c
+from engine import Engine
+from engine2 import Engine2
+from minMax import calculate_move_naive
 
-board = Board()
-move = chess.Move.from_uci("g1f3")
-board.push(move)
-print(board)
-# print(board.fen())
-# moves = board.generate_legal_moves()
-# print(type(moves))
-# for move in moves:
-#     print(move)
-# for _ in range(10):
-#     moves = board.generate_legal_moves()
-#     i = randint(1, board.legal_moves.count())
-#     for _ in range(i):
-#         uci = next(moves)
-#     board.push(uci)
-#     print(board)
-#     print("---------------")
 
+def players_move():
+    while True:
+        move = input("Pass your move: ")
+        move = c.Move.from_uci(move)
+        if move in engine.board.generate_legal_moves():
+            engine.board.push(move)
+            break
+        else:
+            print("move is not valid")
+
+
+engine = Engine2(True, 3)
+
+if engine.colour:
+    engine.print()
+    players_move()
+    engine.print()
+while not engine.board.is_checkmate() and not engine.board.is_stalemate():
+    engine.make_move()
+    engine.print()
+    players_move()
+    engine.print()
 
 

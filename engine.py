@@ -13,64 +13,89 @@ class Engine:
         self.board.push(move)
 
     def evaluate(self):
+        if self.board.is_checkmate() and self.depth % 2 == 0:
+            return float('-inf')
+        if self.board.is_checkmate() and self.depth % 2 == 1:
+            return float('inf')
+        if self.board.is_stalemate():
+            return 0
         white = 0
         black = 0
         symbols = ['Q', 'R', 'N', 'B', 'P']
         values = [9, 5, 3, 3, 1]
         for i in range(len(symbols)):
-            white += len(self.board.pieces(c.Piece.from_symbol(symbols[i]).piece_type, True)) * values[i]
-            black += len(self.board.pieces(c.Piece.from_symbol(symbols[i]).piece_type, False)) * values[i]
+            white += len(self.board.pieces(c.Piece.from_symbol(symbols[i]).piece_type, c.WHITE)) * values[i]
+            black += len(self.board.pieces(c.Piece.from_symbol(symbols[i]).piece_type, c.BLACK)) * values[i]
         if not self.colour:
             return white - black
         return black - white
 
-    def min_(self, depth_left: int):
+    def min_(self, alpha: float, beta: float, depth_left: int):
         if depth_left > 0:
             n = self.board.legal_moves.count()
             if n == 0:
                 if self.board.is_checkmate():
-                    return float('-inf')
-            D = [float('inf') for _ in range(n)]
+                    return float('-inf'), alpha, beta
+                if self.board.is_stalemate():
+                    return 0, alpha, beta
+            mini = float('inf')
             moves = self.board.generate_legal_moves()
             for i in range(n):
                 move = next(moves)
                 self.board.push(move)
-                D[i] = self.max_(depth_left - 1)
+                value = self.max_(alpha, beta, depth_left - 1)[0]
+                mini = min(mini, value)
+                beta = min(beta, value)
                 self.board.pop()
-            return min(D)
-        return self.evaluate()
+                if alpha >= mini:
+                    return mini, alpha, beta
+            return mini, alpha, beta
+        return self.evaluate(), alpha, beta
 
-    def max_(self, depth_left: int):
+    def max_(self, alpha: float, beta: float, depth_left: int):
         if depth_left > 0:
             n = self.board.legal_moves.count()
             if n == 0:
                 if self.board.is_checkmate():
-                    return float('inf')
-            D = [float('inf') for _ in range(n)]
+                    return float('inf'), alpha, beta
+                if self.board.is_stalemate():
+                    return 0, alpha, beta
+            maxi = float('-inf')
             moves = self.board.generate_legal_moves()
             for i in range(n):
                 move = next(moves)
                 self.board.push(move)
-                D[i] = self.min_(depth_left - 1)
+                value = self.min_(alpha, beta, depth_left - 1)[0]
+                maxi = max(value, maxi)
+                alpha = max(alpha, maxi)
                 self.board.pop()
-            return max(D)
-        return self.evaluate()
+                if maxi >= beta:
+                    return maxi, alpha, beta
+            return maxi, alpha, beta
+        return self.evaluate(), alpha, beta
 
     def calculate_move(self, depth_left: int):
+        alpha = float('-inf')
+        beta = float('inf')
         n = self.board.legal_moves.count()
-        D = [[float('-inf'), None] for _ in range(n)]
+        best_move = None
+        maxi = float('-inf')
         moves = self.board.generate_legal_moves()
         for i in range(n):
             move = next(moves)
             self.board.push(move)
-            D[i][0] = self.min_(depth_left - 1)
-            D[i][1] = move
+            value = self.min_(alpha, beta, depth_left - 1)[0]
+            if maxi < value:
+                maxi = value
+                best_move = move
             self.board.pop()
-        best_value = float('-inf')
-        best_valued_move = None
-        for i in range(n):
-            if D[i][0] > best_value:
-                best_value = D[i][0]
-                best_valued_move = D[i][1]
-        return best_valued_move
+            alpha = max(alpha, maxi)
+            print("for move {} got {}".format(move, maxi))
+            if maxi > beta:
+                print('value by alpha', maxi)
+                return best_move
+        print('value', maxi)
+        return best_move
 
+    def print(self):
+        print(self.board, end="\n --------------\n")
