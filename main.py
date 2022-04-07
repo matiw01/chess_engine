@@ -7,12 +7,16 @@ from minMax import calculate_move_naive
 def players_move():
     while True:
         move = input("Pass your move: ")
-        move = c.Move.from_uci(move)
-        if move in engine.board.generate_legal_moves():
-            engine.board.push(move)
-            break
-        else:
-            print("move is not valid")
+        try:
+            move = c.Move.from_uci(move)
+            if move in engine.board.generate_legal_moves():
+                engine.board.push(move)
+                break
+            else:
+                print("move is not valid")
+        except ValueError:
+            print("Your move should be in uci form")
+
 
 
 engine = Engine(True, 4)
