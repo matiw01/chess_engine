@@ -33,11 +33,13 @@ class Engine:
     def min_(self, alpha: float, beta: float, depth_left: int):
         if depth_left > 0:
             n = self.board.legal_moves.count()
+            # checkmate and stalemate check
             if n == 0:
                 if self.board.is_checkmate():
                     return float('-inf'), alpha, beta
                 if self.board.is_stalemate():
                     return 0, alpha, beta
+            # looking for best move
             mini = float('inf')
             moves = self.board.generate_legal_moves()
             for i in range(n):
@@ -45,7 +47,7 @@ class Engine:
                 self.board.push(move)
                 value = self.max_(alpha, beta, depth_left - 1)[0]
                 mini = min(mini, value)
-                beta = min(beta, value)
+                beta = min(beta, mini)
                 self.board.pop()
                 if alpha >= mini:
                     return mini, alpha, beta
@@ -90,11 +92,11 @@ class Engine:
                 best_move = move
             self.board.pop()
             alpha = max(alpha, maxi)
-            print("for move {} got {}".format(move, maxi))
+            # print("for move {} got {}".format(move, value))
             if maxi > beta:
-                print('value by alpha', maxi)
+                # print('value by alpha', maxi)
                 return best_move
-        print('value', maxi)
+        # print('value', maxi)
         return best_move
 
     def print(self):
