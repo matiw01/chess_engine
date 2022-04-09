@@ -24,19 +24,19 @@ class Engine:
         move = self.calculate_move(self.depth)
         self.board.push(move)
 
-    def get_outcome(self):
+    def get_outcome(self, depth_left):
         outcome = self.board.outcome()
         if outcome is None:
             return None
         if outcome.termination == c.Termination.CHECKMATE and outcome.winner == self.player_colour:
-            return float('-inf')
+            return -1000*depth_left
         if outcome.termination == c.Termination.CHECKMATE and not outcome.winner == self.player_colour:
-            return float('inf')
+            return 1000*depth_left
         if outcome.termination == 0:
             return 0
 
-    def evaluate_board(self):
-        outcome = self.get_outcome()
+    def evaluate_board(self, depth_left):
+        outcome = self.get_outcome(depth_left)
         if outcome is not None:
             return outcome
         white = 0
@@ -63,6 +63,8 @@ class Engine:
         return black - white
 
     def evaluate_move(self, move, colour):
+        if move.promotion is not None and not self.board.is_attacked_by(colour, move.to_square):
+            return 8
         if self.board.gives_check(move):
             return 3
         if self.board.is_capture(move):
@@ -87,7 +89,7 @@ class Engine:
             # checkmate and stalemate check
             if n == 0:
                 if self.board.is_checkmate():
-                    return float('inf'), alpha, beta
+                    return 1000*(depth_left + self.quiescence), alpha, beta
                 if self.board.is_stalemate():
                     return 0, alpha, beta
             # looking for best move
@@ -112,7 +114,7 @@ class Engine:
             n = self.board.legal_moves.count()
             if n == 0:
                 if self.board.is_checkmate():
-                    return float('-inf'), alpha, beta
+                    return 1000*(depth_left + self.quiescence), alpha, beta
                 if self.board.is_stalemate():
                     return 0, alpha, beta
             maxi = float('-inf')
@@ -160,14 +162,14 @@ class Engine:
         if depth_left > 0:
             mini = float('inf')
             if not self.board.is_check():
-                mini = self.evaluate_board()
+                mini = self.evaluate_board(depth_left)
                 if mini <= alpha:
                     return mini, alpha, beta
                 beta = min(beta, mini)
             n = self.board.legal_moves.count()
             if n == 0:
                 if self.board.is_checkmate():
-                    return float('inf'), alpha, beta
+                    return 1000*depth_left, alpha, beta
                 if self.board.is_stalemate():
                     return 0, alpha, beta
             moves = self.board.generate_legal_moves()
@@ -183,20 +185,20 @@ class Engine:
                     if mini <= alpha:
                         return mini, alpha, beta
             return mini, alpha, beta
-        return self.evaluate_board(), alpha, beta
+        return self.evaluate_board(depth_left), alpha, beta
 
     def quiescence_search_max(self, alpha, beta, depth_left):
         if depth_left > 0:
             maxi = float('-inf')
             if not self.board.is_check():
-                maxi = self.evaluate_board()
+                maxi = self.evaluate_board(depth_left)
                 if maxi >= beta:
                     return maxi, alpha, beta
                 alpha = max(alpha, maxi)
             n = self.board.legal_moves.count()
             if n == 0:
                 if self.board.is_checkmate():
-                    return float('-inf'), alpha, beta
+                    return 1000*depth_left, alpha, beta
                 if self.board.is_stalemate():
                     return 0, alpha, beta
             moves = self.board.generate_legal_moves()
@@ -212,7 +214,7 @@ class Engine:
                     if maxi >= beta:
                         return maxi, alpha, beta
             return maxi, alpha, beta
-        return self.evaluate_board(), alpha, beta
+        return self.evaluate_board(depth_left), alpha, beta
 
     def print(self):
         print(self.board, end="\n --------------\n")
