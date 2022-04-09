@@ -1,6 +1,8 @@
 import chess as c
+import chess.svg
 from engine import Engine
 from time import time
+from IPython.display import SVG, display
 
 
 def players_move():
@@ -29,6 +31,9 @@ while not engine.board.is_checkmate() and not engine.board.is_stalemate():
     checkpoint = time()
     engine.make_move()
     print("Move made in ", time() - checkpoint, "s")
+    print("Used dictionary", engine.used_dictionary)
+    print("There are {} values in dictionary".format(len(engine.evaluated_positions)))
+    print("Visited {}".format(engine.visited_nodes))
     engine.print()
     if engine.board.is_checkmate():
         engine_won = True

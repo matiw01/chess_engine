@@ -1,11 +1,13 @@
 from chess import Board
 import chess as c
+import chess.polyglot
 
 
 class Engine:
     def __init__(self, board=Board('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'),
                  player_colour=True, depth=4, quiescence=4):
-
+        self.visited_nodes = 0
+        self.used_dictionary = 0
         self.board = board
         self.player_colour = player_colour
         self.depth = depth
@@ -36,6 +38,11 @@ class Engine:
             return 0
 
     def evaluate_board(self, depth_left):
+        self.visited_nodes += 1
+        key = c.polyglot.zobrist_hash(self.board)
+        if key in self.evaluated_positions:
+            self.used_dictionary += 1
+            return self.evaluated_positions[key]
         outcome = self.get_outcome(depth_left)
         if outcome is not None:
             return outcome
@@ -58,8 +65,11 @@ class Engine:
         # else:
         #     black += moves1*0.001
         #     white += moves2*0.001
+
         if not self.player_colour:
+            self.evaluated_positions[key] = white - black
             return white - black
+        self.evaluated_positions[key] = black - white
         return black - white
 
     def evaluate_move(self, move, colour):
@@ -78,6 +88,8 @@ class Engine:
                     self.board.piece_at(move.from_square).piece_type]
             else:
                 return self.PIECE_VALUES[self.board.piece_at(move.to_square).piece_type]
+        if self.board.is_castling(move):
+            return 1
         return 0
 
     def sort_moves(self, moves: list, colour: c.Color):
@@ -85,6 +97,7 @@ class Engine:
 
     def min_(self, alpha: float, beta: float, depth_left: int):
         if depth_left > 0:
+            self.visited_nodes += 1
             n = self.board.legal_moves.count()
             # checkmate and stalemate check
             if n == 0:
@@ -111,6 +124,7 @@ class Engine:
 
     def max_(self, alpha: float, beta: float, depth_left: int):
         if depth_left > 0:
+            self.visited_nodes += 1
             n = self.board.legal_moves.count()
             if n == 0:
                 if self.board.is_checkmate():
@@ -134,6 +148,8 @@ class Engine:
         return self.quiescence_search_max(alpha, beta, self.quiescence)
 
     def calculate_move(self, depth_left: int):
+        self.visited_nodes = 0
+        self.used_dictionary = 0
         alpha = float('-inf')
         beta = float('inf')
         n = self.board.legal_moves.count()
@@ -160,6 +176,7 @@ class Engine:
 
     def quiescence_search_min(self, alpha, beta, depth_left):
         if depth_left > 0:
+            self.visited_nodes += 1
             mini = float('inf')
             if not self.board.is_check():
                 mini = self.evaluate_board(depth_left)
@@ -189,6 +206,7 @@ class Engine:
 
     def quiescence_search_max(self, alpha, beta, depth_left):
         if depth_left > 0:
+            self.visited_nodes += 1
             maxi = float('-inf')
             if not self.board.is_check():
                 maxi = self.evaluate_board(depth_left)
