@@ -23,6 +23,7 @@ class Engine:
         self.evaluated_positions = {}
 
     def make_move(self):
+        self.evaluated_positions = {}
         move = self.calculate_move(self.depth)
         self.board.push(move)
 
