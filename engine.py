@@ -5,7 +5,7 @@ import chess.polyglot
 
 class Engine:
     def __init__(self, board=Board('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'),
-                 player_colour=True, depth=4, quiescence=4):
+                 player_colour=True, depth=2, quiescence=6):
         self.visited_nodes = 0
         self.used_dictionary = 0
         self.board = board
@@ -38,7 +38,7 @@ class Engine:
         if outcome.termination == 0:
             return 0
 
-    def evaluate_board(self, depth_left):
+    def evaluate_board(self, depth_left, moves1):
         self.visited_nodes += 1
         key = c.polyglot.zobrist_hash(self.board)
         if key in self.evaluated_positions:
@@ -55,17 +55,18 @@ class Engine:
                 white += self.PIECE_VALUES[piece.piece_type]
             else:
                 black += self.PIECE_VALUES[piece.piece_type]
+
         # static evaluation counting mobility but slowing engine X10
         # moves1 = len(list(self.board.legal_moves))
-        # self.board.push(c.Move.null())
-        # moves2 = len(list(self.board.legal_moves))
-        # self.board.pop()
-        # if self.board.turn == c.WHITE:
-        #     white += moves1*0.001
-        #     black += moves2*0.001
-        # else:
-        #     black += moves1*0.001
-        #     white += moves2*0.001
+        self.board.push(c.Move.null())
+        moves2 = len(list(self.board.legal_moves))
+        self.board.pop()
+        if self.board.turn == c.WHITE:
+            white += moves1*0.01
+            black += moves2*0.01
+        else:
+            black += moves1*0.01
+            white += moves2*0.01
 
         if not self.player_colour:
             self.evaluated_positions[key] = white - black
@@ -74,7 +75,7 @@ class Engine:
         return black - white
 
     def evaluate_move(self, move, colour):
-        if move.promotion is not None and not self.board.is_attacked_by(colour, move.to_square):
+        if move.promotion is not None:
             return 8
         if self.board.gives_check(move):
             return 3
@@ -85,8 +86,8 @@ class Engine:
                 else:
                     return 1
             if self.board.is_attacked_by(colour, move.to_square):
-                return self.PIECE_VALUES[self.board.piece_at(move.to_square).piece_type] - self.PIECE_VALUES[
-                    self.board.piece_at(move.from_square).piece_type]
+                return self.PIECE_VALUES[self.board.piece_at(move.to_square).piece_type] - \
+                       self.PIECE_VALUES[self.board.piece_at(move.from_square).piece_type]
             else:
                 return self.PIECE_VALUES[self.board.piece_at(move.to_square).piece_type]
         if self.board.is_castling(move):
@@ -176,11 +177,14 @@ class Engine:
         return best_move
 
     def quiescence_search_min(self, alpha, beta, depth_left):
+        moves = self.board.generate_legal_moves()
+        moves = list(moves)
         if depth_left > 0:
             self.visited_nodes += 1
             mini = float('inf')
+
             if not self.board.is_check():
-                mini = self.evaluate_board(depth_left)
+                mini = self.evaluate_board(depth_left, len(moves))
                 if mini <= alpha:
                     return mini, alpha, beta
                 beta = min(beta, mini)
@@ -190,8 +194,6 @@ class Engine:
                     return 1000*depth_left, alpha, beta
                 if self.board.is_stalemate():
                     return 0, alpha, beta
-            moves = self.board.generate_legal_moves()
-            moves = list(moves)
             self.sort_moves(moves, not self.player_colour)
             for move in moves:
                 if self.board.gives_check(move) or self.board.is_capture(move) or self.board.is_check():
@@ -203,14 +205,16 @@ class Engine:
                     if mini <= alpha:
                         return mini, alpha, beta
             return mini, alpha, beta
-        return self.evaluate_board(depth_left), alpha, beta
+        return self.evaluate_board(depth_left, len(moves)), alpha, beta
 
     def quiescence_search_max(self, alpha, beta, depth_left):
+        moves = self.board.generate_legal_moves()
+        moves = list(moves)
         if depth_left > 0:
             self.visited_nodes += 1
             maxi = float('-inf')
             if not self.board.is_check():
-                maxi = self.evaluate_board(depth_left)
+                maxi = self.evaluate_board(depth_left, len(moves))
                 if maxi >= beta:
                     return maxi, alpha, beta
                 alpha = max(alpha, maxi)
@@ -220,8 +224,6 @@ class Engine:
                     return 1000*depth_left, alpha, beta
                 if self.board.is_stalemate():
                     return 0, alpha, beta
-            moves = self.board.generate_legal_moves()
-            moves = list(moves)
             self.sort_moves(moves, self.player_colour)
             for move in moves:
                 if self.board.gives_check(move) or self.board.is_capture(move) or self.board.is_check():
@@ -233,7 +235,7 @@ class Engine:
                     if maxi >= beta:
                         return maxi, alpha, beta
             return maxi, alpha, beta
-        return self.evaluate_board(depth_left), alpha, beta
+        return self.evaluate_board(depth_left, len(moves)), alpha, beta
 
     def print(self):
         print(self.board, end="\n --------------\n")

@@ -1,8 +1,6 @@
 import chess as c
 from engine import Engine
 from time import time
-import sys
-
 
 def players_move():
     while True:
@@ -18,8 +16,8 @@ def players_move():
             print("Your move should be in uci form")
 
 
-engine = Engine(board=c.Board(),
-                player_colour=True, depth=4, quiescence=4)
+engine = Engine(board=c.Board("r3k1nr/pppqb1pp/2n1ppb1/3pP3/3P4/P1NB1N2/1PP2PPP/R1BQ1RK1 w Qkq - 0 1"),
+                player_colour=True, depth=2, quiescence=6)
 
 engine_won = False
 if engine.player_colour:
@@ -32,7 +30,6 @@ while not engine.board.is_checkmate() and not engine.board.is_stalemate():
     print("Move made in ", time() - checkpoint, "s")
     print("Used dictionary", engine.used_dictionary)
     print("There are {} values in dictionary".format(len(engine.evaluated_positions)))
-    print("It takes {} bytes".format(sys.getsizeof(engine.evaluated_positions)))
     print("Visited {}".format(engine.visited_nodes))
     engine.print()
     if engine.board.is_checkmate():
