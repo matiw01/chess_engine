@@ -16,8 +16,8 @@ def players_move():
             print("Your move should be in uci form")
 
 
-engine = Engine(board=c.Board("r3k1nr/pppqb1pp/2n1ppb1/3pP3/3P4/P1NB1N2/1PP2PPP/R1BQ1RK1 w Qkq - 0 1"),
-                player_colour=True, depth=2, quiescence=6)
+engine = Engine(board=c.Board("r5rk/2p1Nppp/3p3P/pp2p1P1/4P3/2qnPQK1/8/R6R w - - 1 1"),
+                player_colour=False, depth=2, quiescence=6)
 
 engine_won = False
 if engine.player_colour:

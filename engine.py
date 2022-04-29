@@ -56,7 +56,7 @@ class Engine:
             else:
                 black += self.PIECE_VALUES[piece.piece_type]
 
-        # static evaluation counting mobility but slowing engine X10
+        # static evaluation counting mobility but slowing engine X10 because alfa-beta-pruning being not so effective
         # moves1 = len(list(self.board.legal_moves))
         self.board.push(c.Move.null())
         moves2 = len(list(self.board.legal_moves))
@@ -121,7 +121,6 @@ class Engine:
                 if alpha >= mini:
                     return mini, alpha, beta
             return mini, alpha, beta
-        # print("Starting quisence serch")
         return self.quiescence_search_min(alpha, beta, self.quiescence)
 
     def max_(self, alpha: float, beta: float, depth_left: int):
@@ -146,7 +145,6 @@ class Engine:
                 if maxi >= beta:
                     return maxi, alpha, beta
             return maxi, alpha, beta
-        # print("Starting quisence search")
         return self.quiescence_search_max(alpha, beta, self.quiescence)
 
     def calculate_move(self, depth_left: int):
@@ -170,7 +168,7 @@ class Engine:
             self.board.pop()
             alpha = max(alpha, maxi)
             # print("for move {} got {}".format(move, value))
-            if maxi > beta:
+            if maxi >= beta:
                 # print('value by alpha', maxi)
                 return best_move
         print('position evaluation', maxi)
