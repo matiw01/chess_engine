@@ -32,15 +32,15 @@ class Engine:
         if outcome is None:
             return None
         if outcome.termination == c.Termination.CHECKMATE and outcome.winner == self.player_colour:
-            return -1000*depth_left
+            return -1000 * depth_left
         if outcome.termination == c.Termination.CHECKMATE and not outcome.winner == self.player_colour:
-            return 1000*depth_left
+            return 1000 * depth_left
         if outcome.termination == 0:
             return 0
 
     def evaluate_board(self, depth_left, moves1):
         self.visited_nodes += 1
-        key = c.polyglot.zobrist_hash(self.board)
+        key = (c.polyglot.zobrist_hash(self.board), depth_left)
         if key in self.evaluated_positions:
             self.used_dictionary += 1
             return self.evaluated_positions[key]
@@ -57,22 +57,22 @@ class Engine:
                 black += self.PIECE_VALUES[piece.piece_type]
 
         # static evaluation counting mobility but slowing engine X10 because alfa-beta-pruning being not so effective
-        # moves1 = len(list(self.board.legal_moves))
+        # kind off fixed by rounding
         self.board.push(c.Move.null())
         moves2 = len(list(self.board.legal_moves))
         self.board.pop()
         if self.board.turn == c.WHITE:
-            white += moves1*0.01
-            black += moves2*0.01
+            white += moves1 * 0.01
+            black += moves2 * 0.01
         else:
-            black += moves1*0.01
-            white += moves2*0.01
+            black += moves1 * 0.01
+            white += moves2 * 0.01
 
         if not self.player_colour:
-            self.evaluated_positions[key] = white - black
-            return white - black
-        self.evaluated_positions[key] = black - white
-        return black - white
+            self.evaluated_positions[key] = round(white - black, 1)
+            return round(white - black, 1)
+        self.evaluated_positions[key] = round(black - white, 1)
+        return round(black - white, 1)
 
     def evaluate_move(self, move, colour):
         if move.promotion is not None:
@@ -99,14 +99,18 @@ class Engine:
 
     def min_(self, alpha: float, beta: float, depth_left: int):
         if depth_left > 0:
+            key = (c.polyglot.zobrist_hash(self.board), self.depth - depth_left)
+            if key in self.evaluated_positions:
+                self.used_dictionary += 1
+                return self.evaluated_positions[key]
             self.visited_nodes += 1
             n = self.board.legal_moves.count()
             # checkmate and stalemate check
             if n == 0:
                 if self.board.is_checkmate():
-                    return 1000*(depth_left + self.quiescence), alpha, beta
+                    return 1000 * (depth_left + self.quiescence)
                 if self.board.is_stalemate():
-                    return 0, alpha, beta
+                    return 0
             # looking for best move
             mini = float('inf')
             moves = self.board.generate_legal_moves()
@@ -114,37 +118,45 @@ class Engine:
             self.sort_moves(moves, not self.player_colour)
             for move in moves:
                 self.board.push(move)
-                value = self.max_(alpha, beta, depth_left - 1)[0]
+                value = self.max_(alpha, beta, depth_left - 1)
                 mini = min(mini, value)
                 beta = min(beta, mini)
                 self.board.pop()
                 if alpha >= mini:
-                    return mini, alpha, beta
-            return mini, alpha, beta
+                    self.evaluated_positions[key] = mini
+                    return mini
+            self.evaluated_positions[key] = mini
+            return mini
         return self.quiescence_search_min(alpha, beta, self.quiescence)
 
     def max_(self, alpha: float, beta: float, depth_left: int):
         if depth_left > 0:
+            key = (c.polyglot.zobrist_hash(self.board), self.depth - depth_left)
+            if key in self.evaluated_positions:
+                self.used_dictionary += 1
+                return self.evaluated_positions[key]
             self.visited_nodes += 1
             n = self.board.legal_moves.count()
             if n == 0:
                 if self.board.is_checkmate():
-                    return 1000*(depth_left + self.quiescence), alpha, beta
+                    return 1000 * (depth_left + self.quiescence)
                 if self.board.is_stalemate():
-                    return 0, alpha, beta
+                    return 0
             maxi = float('-inf')
             moves = self.board.generate_legal_moves()
             moves = list(moves)
             self.sort_moves(moves, self.player_colour)
             for move in moves:
                 self.board.push(move)
-                value = self.min_(alpha, beta, depth_left - 1)[0]
+                value = self.min_(alpha, beta, depth_left - 1)
                 maxi = max(value, maxi)
                 alpha = max(alpha, maxi)
                 self.board.pop()
                 if maxi >= beta:
-                    return maxi, alpha, beta
-            return maxi, alpha, beta
+                    self.evaluated_positions[key] = maxi
+                    return maxi
+            self.evaluated_positions[key] = maxi
+            return maxi
         return self.quiescence_search_max(alpha, beta, self.quiescence)
 
     def calculate_move(self, depth_left: int):
@@ -161,7 +173,7 @@ class Engine:
         for i in range(n):
             move = moves[i]
             self.board.push(move)
-            value = self.min_(alpha, beta, depth_left - 1)[0]
+            value = self.min_(alpha, beta, depth_left - 1)
             if maxi < value:
                 maxi = value
                 best_move = move
@@ -174,6 +186,7 @@ class Engine:
         print('position evaluation', maxi)
         return best_move
 
+    # TODO change quiescence not to allow engine stop when 2 pieces hanging
     def quiescence_search_min(self, alpha, beta, depth_left):
         moves = self.board.generate_legal_moves()
         moves = list(moves)
@@ -184,26 +197,26 @@ class Engine:
             if not self.board.is_check():
                 mini = self.evaluate_board(depth_left, len(moves))
                 if mini <= alpha:
-                    return mini, alpha, beta
+                    return mini
                 beta = min(beta, mini)
             n = self.board.legal_moves.count()
             if n == 0:
                 if self.board.is_checkmate():
-                    return 1000*depth_left, alpha, beta
+                    return 1000 * depth_left
                 if self.board.is_stalemate():
-                    return 0, alpha, beta
+                    return 0
             self.sort_moves(moves, not self.player_colour)
             for move in moves:
                 if self.board.gives_check(move) or self.board.is_capture(move) or self.board.is_check():
                     self.board.push(move)
-                    value = self.quiescence_search_max(alpha, beta, depth_left - 1)[0]
+                    value = self.quiescence_search_max(alpha, beta, depth_left - 1)
                     mini = min(value, mini)
                     beta = min(beta, mini)
                     self.board.pop()
                     if mini <= alpha:
-                        return mini, alpha, beta
-            return mini, alpha, beta
-        return self.evaluate_board(depth_left, len(moves)), alpha, beta
+                        return mini
+            return mini
+        return self.evaluate_board(depth_left, len(moves))
 
     def quiescence_search_max(self, alpha, beta, depth_left):
         moves = self.board.generate_legal_moves()
@@ -214,26 +227,26 @@ class Engine:
             if not self.board.is_check():
                 maxi = self.evaluate_board(depth_left, len(moves))
                 if maxi >= beta:
-                    return maxi, alpha, beta
+                    return maxi
                 alpha = max(alpha, maxi)
             n = self.board.legal_moves.count()
             if n == 0:
                 if self.board.is_checkmate():
-                    return 1000*depth_left, alpha, beta
+                    return 1000 * depth_left
                 if self.board.is_stalemate():
-                    return 0, alpha, beta
+                    return 0
             self.sort_moves(moves, self.player_colour)
             for move in moves:
                 if self.board.gives_check(move) or self.board.is_capture(move) or self.board.is_check():
                     self.board.push(move)
-                    value = self.quiescence_search_min(alpha, beta, depth_left - 1)[0]
+                    value = self.quiescence_search_min(alpha, beta, depth_left - 1)
                     maxi = max(value, maxi)
                     alpha = max(alpha, maxi)
                     self.board.pop()
                     if maxi >= beta:
-                        return maxi, alpha, beta
-            return maxi, alpha, beta
-        return self.evaluate_board(depth_left, len(moves)), alpha, beta
+                        return maxi
+            return maxi
+        return self.evaluate_board(depth_left, len(moves))
 
     def print(self):
         print(self.board, end="\n --------------\n")

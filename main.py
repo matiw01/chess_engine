@@ -16,9 +16,8 @@ def players_move():
             print("Your move should be in uci form")
 
 
-engine = Engine(board=c.Board("r5rk/2p1Nppp/3p3P/pp2p1P1/4P3/2qnPQK1/8/R6R w - - 1 1"),
-                player_colour=False, depth=2, quiescence=6)
-
+engine = Engine(board=c.Board(),
+                player_colour=False, depth=3, quiescence=5)
 engine_won = False
 if engine.player_colour:
     engine.print()
@@ -29,7 +28,7 @@ while not engine.board.is_checkmate() and not engine.board.is_stalemate():
     engine.make_move()
     print("Move made in ", time() - checkpoint, "s")
     print("Used dictionary", engine.used_dictionary)
-    print("There are {} values in dictionary".format(len(engine.evaluated_positions)))
+    # print("There are {} values in dictionary".format(len(engine.evaluated_positions)))
     print("Visited {}".format(engine.visited_nodes))
     engine.print()
     if engine.board.is_checkmate():
