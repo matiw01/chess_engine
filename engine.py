@@ -45,6 +45,12 @@ class Engine:
         if outcome.termination == 0:
             return 0
 
+    def pawns_advancment(self, pawns, param):
+        sum_ = 0
+        for pawn in pawns:
+            sum_ += pawn // 8
+        return sum_*param
+
     def evaluate_board(self, depth_left, moves1):
         self.visited_nodes += 1
         key = (c.polyglot.zobrist_hash(self.board), depth_left)
@@ -68,12 +74,20 @@ class Engine:
         self.board.push(c.Move.null())
         moves2 = len(list(self.board.legal_moves))
         self.board.pop()
+
+        w_pawns = self.board.pieces(c.Piece.from_symbol('P').piece_type, True)
+        b_pawns = self.board.pieces(c.Piece.from_symbol('P').piece_type, False)
+
+        white += self.pawns_advancment(w_pawns, 0.01)
+        black += self.pawns_advancment(b_pawns, 0.01)
+
         if self.board.turn == c.WHITE:
             white += moves1 * 0.01
             black += moves2 * 0.01
         else:
             black += moves1 * 0.01
             white += moves2 * 0.01
+
 
         if not self.player_colour:
             self.evaluated_positions[key] = round(white - black, 1)
