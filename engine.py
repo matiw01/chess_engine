@@ -49,7 +49,7 @@ class Engine:
         sum_ = 0
         for pawn in pawns:
             sum_ += pawn // 8
-        return sum_*param
+        return sum_ * param
 
     def evaluate_board(self, depth_left, moves1):
         self.visited_nodes += 1
@@ -87,7 +87,6 @@ class Engine:
         else:
             black += moves1 * 0.01
             white += moves2 * 0.01
-
 
         if not self.player_colour:
             self.evaluated_positions[key] = round(white - black, 1)

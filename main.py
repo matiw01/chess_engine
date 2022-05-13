@@ -2,6 +2,7 @@ import chess as c
 from engine import Engine
 from time import time
 
+
 def players_move():
     while True:
         move = input("Pass your move: ")
@@ -18,6 +19,7 @@ def players_move():
 
 engine = Engine(board=c.Board(),
                 player_colour=False, depth=3, quiescence=5)
+
 engine_won = False
 if engine.player_colour:
     engine.print()

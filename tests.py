@@ -28,7 +28,7 @@ print(engine.board.piece_map())
 # checkpoint = time()
 # print("time:", time()-checkpoint)
 n = 10**6
-tab = [random.randint(-100,100) for i in range(n)]
+tab = [random.randint(-100, 100) for i in range(n)]
 
 checkpoint = time()
 sum_ = 0

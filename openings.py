@@ -9,5 +9,3 @@ pieces = board.piece_map()
 
 pawns = board.pieces(c.Piece.from_symbol('P').piece_type, True)
 
-
-
