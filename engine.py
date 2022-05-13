@@ -1,3 +1,5 @@
+import random
+
 from chess import Board
 import chess as c
 import chess.polyglot
@@ -21,8 +23,13 @@ class Engine:
             c.KING: 0,
         }
         self.evaluated_positions = {}
+        self.reader = chess.polyglot.open_reader("opening_base/bookoutput.bin")
 
     def make_move(self):
+        opening_moves = (list(self.reader.find_all(self.board)))
+        if len(opening_moves) != 0:
+            self.board.push(random.choice(opening_moves).move)
+            return
         self.evaluated_positions = {}
         move = self.calculate_move(self.depth)
         self.board.push(move)
