@@ -159,7 +159,7 @@ class Engine:
             n = self.board.legal_moves.count()
             if n == 0:
                 if self.board.is_checkmate():
-                    return 1000 * (depth_left + self.quiescence)
+                    return -1000 * (depth_left + self.quiescence)
                 if self.board.is_stalemate():
                     return 0
             maxi = float('-inf')
@@ -206,7 +206,6 @@ class Engine:
         print('position evaluation', maxi)
         return best_move
 
-    # TODO change quiescence not to allow engine stop when 2 pieces hanging
     def quiescence_search_min(self, alpha, beta, depth_left):
         moves = self.board.generate_legal_moves()
         moves = list(moves)
@@ -252,7 +251,7 @@ class Engine:
             n = self.board.legal_moves.count()
             if n == 0:
                 if self.board.is_checkmate():
-                    return 1000 * depth_left
+                    return -1000 * depth_left
                 if self.board.is_stalemate():
                     return 0
             self.sort_moves(moves, self.player_colour)
