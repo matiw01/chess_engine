@@ -18,7 +18,7 @@ def players_move():
 
 
 engine = Engine(board=c.Board(),
-                player_colour=False, depth=3, quiescence=5)
+                player_colour=True, depth=3, quiescence=5)
 
 engine_won = False
 if engine.player_colour:
@@ -30,8 +30,7 @@ while not engine.board.is_checkmate() and not engine.board.is_stalemate():
     engine.make_move()
     print("Move made in ", time() - checkpoint, "s")
     print("Used dictionary", engine.used_dictionary)
-    # print("There are {} values in dictionary".format(len(engine.evaluated_positions)))
-    print("Visited {}".format(engine.visited_nodes))
+    print("Visited nodes {}".format(engine.visited_nodes))
     engine.print()
     if engine.board.is_checkmate():
         engine_won = True

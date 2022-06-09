@@ -36,11 +36,3 @@ print("time", time() - checkpoint)
 checkpoint = time()
 sum_ = sum(tab)
 print("time", time() - checkpoint)
-
-def CapturedPiece(board, move):
-    if board.is_capture(move):
-        if board.is_en_passant(move):
-            return 1
-        else:
-            return board.piece_at(move.to_square).piece_type
-    return 0

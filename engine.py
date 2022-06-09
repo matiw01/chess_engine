@@ -5,6 +5,13 @@ import chess as c
 import chess.polyglot
 
 
+def pawns_advancement(pawns, param):
+    sum_ = 0
+    for pawn in pawns:
+        sum_ += pawn // 8
+    return sum_ * param
+
+
 class Engine:
     def __init__(self, board=Board('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'),
                  player_colour=True, depth=2, quiescence=6):
@@ -45,12 +52,6 @@ class Engine:
         if outcome.termination == 0:
             return 0
 
-    def pawns_advancment(self, pawns, param):
-        sum_ = 0
-        for pawn in pawns:
-            sum_ += pawn // 8
-        return sum_ * param
-
     def evaluate_board(self, depth_left, moves1):
         self.visited_nodes += 1
         key = (c.polyglot.zobrist_hash(self.board), depth_left)
@@ -69,8 +70,6 @@ class Engine:
             else:
                 black += self.PIECE_VALUES[piece.piece_type]
 
-        # static evaluation counting mobility but slowing engine X10 because alfa-beta-pruning being not so effective
-        # kind off fixed by rounding
         self.board.push(c.Move.null())
         moves2 = len(list(self.board.legal_moves))
         self.board.pop()
@@ -78,8 +77,8 @@ class Engine:
         w_pawns = self.board.pieces(c.Piece.from_symbol('P').piece_type, True)
         b_pawns = self.board.pieces(c.Piece.from_symbol('P').piece_type, False)
 
-        white += self.pawns_advancment(w_pawns, 0.01)
-        black += self.pawns_advancment(b_pawns, 0.01)
+        white += pawns_advancement(w_pawns, 0.01)
+        black += pawns_advancement(b_pawns, 0.01)
 
         if self.board.turn == c.WHITE:
             white += moves1 * 0.01
@@ -199,9 +198,7 @@ class Engine:
                 best_move = move
             self.board.pop()
             alpha = max(alpha, maxi)
-            # print("for move {} got {}".format(move, value))
             if maxi >= beta:
-                # print('value by alpha', maxi)
                 return best_move
         print('position evaluation', maxi)
         return best_move
@@ -269,9 +266,3 @@ class Engine:
 
     def print(self):
         print(self.board, end="\n --------------\n")
-
-        # symbols = ['Q', 'R', 'N', 'B', 'P']
-        # values = [9, 5, 3, 3, 1]
-        # for i in range(len(symbols)):
-        #     white += len(self.board.pieces(c.Piece.from_symbol(symbols[i]).piece_type, c.WHITE)) * values[i]
-        #     black += len(self.board.pieces(c.Piece.from_symbol(symbols[i]).piece_type, c.BLACK)) * values[i]
